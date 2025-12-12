@@ -74,15 +74,10 @@ export default function DashboardPage() {
     async function loadUserAndTeam() {
       try {
         const user = await fetchCurrentUser();
-        // More robust admin check
-        const adminValue = user.is_admin;
-        const isAdminValue = adminValue === true || 
-                            adminValue === "true" || 
-                            adminValue === 1 || 
-                            adminValue === "1" ||
-                            String(adminValue).toLowerCase() === "true";
+        // Admin check - is_admin is a boolean from the API
+        const isAdminValue = Boolean(user.is_admin);
         setIsAdmin(isAdminValue);
-        console.log("[Dashboard] User admin status:", adminValue, "Type:", typeof adminValue, "Resolved to:", isAdminValue);
+        console.log("[Dashboard] User admin status:", user.is_admin, "Type:", typeof user.is_admin, "Resolved to:", isAdminValue);
         
         // Only fetch team members if user is admin
         if (isAdminValue) {
