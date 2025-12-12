@@ -25,84 +25,62 @@ Next.js frontend application for the GaadiMech CRM, configured for Railway deplo
    ```bash
    npm run build
    ```
-   This creates a static export in the `out/` directory.
+   This builds the Next.js app for production.
 
 ## Railway Deployment
 
+### Quick Start
+
+For a quick deployment guide, see **[DEPLOYMENT_QUICK_START.md](./DEPLOYMENT_QUICK_START.md)**
+
+### Complete Deployment Guide
+
+For detailed step-by-step instructions including custom domain setup (`crm.gaadimech.com`), see **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)**
+
 ### Prerequisites
+
 - Railway account (sign up at https://railway.app)
 - GitHub account (for connecting repository)
 - AWS backend deployed and accessible
+- GoDaddy account (for custom domain setup)
 
-### Deployment Steps
+### Quick Deployment Steps
 
-#### Option 1: Deploy via Railway Dashboard (Recommended)
-
-1. **Create a new Git repository:**
+1. **Push code to GitHub:**
    ```bash
-   cd GaadiMech-CRM-Frontend
    git init
    git add .
    git commit -m "Initial commit"
-   git branch -M main
    git remote add origin https://github.com/yourusername/GaadiMech-CRM-Frontend.git
    git push -u origin main
    ```
 
-2. **Connect to Railway:**
-   - Go to https://railway.app
-   - Click "New Project"
-   - Select "Deploy from GitHub repo"
-   - Choose your `GaadiMech-CRM-Frontend` repository
-   - Railway will automatically detect Next.js and configure the build
+2. **Deploy to Railway:**
+   - Go to https://railway.app → New Project → Deploy from GitHub
+   - Select your repository
+   - Railway will auto-detect Next.js and build
 
-3. **Configure Environment Variables:**
-   - In Railway dashboard, go to your project → Variables
-   - Add the following variable:
+3. **Set Environment Variable:**
+   - Railway → Variables → Add:
      ```
      NEXT_PUBLIC_API_BASE_URL=https://your-aws-backend.elasticbeanstalk.com
      ```
-   - Replace with your actual AWS Elastic Beanstalk backend URL
 
-4. **Deploy:**
-   - Railway will automatically build and deploy
-   - The build process will:
-     - Install dependencies (`npm install`)
-     - Build the Next.js app (`npm run build`)
-     - Serve the static files (`npm start`)
+4. **Add Custom Domain:**
+   - Railway → Settings → Domains → Add `crm.gaadimech.com`
+   - Configure DNS in GoDaddy (see full guide)
 
-5. **Get your Railway URL:**
-   - After deployment, Railway will provide a URL like `https://your-app.railway.app`
-   - Update your AWS backend's `EB_ORIGIN` environment variable with this URL
-
-#### Option 2: Deploy via Railway CLI
-
-1. **Install Railway CLI:**
-   ```bash
-   npm i -g @railway/cli
-   ```
-
-2. **Login:**
-   ```bash
-   railway login
-   ```
-
-3. **Initialize and deploy:**
-   ```bash
-   railway init
-   railway up
-   ```
-
-4. **Set environment variables:**
-   ```bash
-   railway variables set NEXT_PUBLIC_API_BASE_URL=https://your-aws-backend.elasticbeanstalk.com
-   ```
+5. **Update Backend CORS:**
+   - AWS EB → Configuration → Software → Set:
+     ```
+     EB_ORIGIN=https://crm.gaadimech.com,http://crm.gaadimech.com
+     ```
 
 ### Configuration Files
 
 - `railway.json`: Railway build and deploy configuration
 - `railway.toml`: Alternative Railway configuration (TOML format)
-- `next.config.ts`: Next.js configuration (static export mode)
+- `next.config.ts`: Next.js configuration (server mode for Railway)
 - `.env.example`: Environment variable template
 
 ### Environment Variables
@@ -114,7 +92,7 @@ Next.js frontend application for the GaadiMech CRM, configured for Railway deplo
 **Important:** 
 - For Railway deployment, set `NEXT_PUBLIC_API_BASE_URL` to your AWS backend URL
 - The frontend will make API calls to this URL
-- Ensure CORS is configured on the backend to allow requests from your Railway domain
+- Ensure CORS is configured on the backend to allow requests from your Railway/custom domain
 
 ### API Configuration
 
@@ -125,31 +103,18 @@ The frontend is configured to call the backend API at:
 ### Connecting Frontend and Backend
 
 1. **Backend CORS Configuration:**
-   - In AWS Elastic Beanstalk, set the `EB_ORIGIN` environment variable to your Railway frontend URL
-   - Example: `EB_ORIGIN=https://your-app.railway.app`
+   - In AWS Elastic Beanstalk, set the `EB_ORIGIN` environment variable to include:
+     - Your Railway default domain: `https://your-app.up.railway.app`
+     - Your custom domain: `https://crm.gaadimech.com,http://crm.gaadimech.com`
 
 2. **Frontend API Configuration:**
    - In Railway, set `NEXT_PUBLIC_API_BASE_URL` to your AWS backend URL
    - Example: `NEXT_PUBLIC_API_BASE_URL=https://your-backend.elasticbeanstalk.com`
 
 3. **Verify Connection:**
-   - Test API calls from the frontend
+   - Test both HTTP and HTTPS: `http://crm.gaadimech.com` and `https://crm.gaadimech.com`
    - Check browser console for CORS errors
    - Verify cookies/sessions work correctly
-
-### Troubleshooting
-
-- **Build failures:** Check Railway build logs for errors
-- **API connection issues:** Verify `NEXT_PUBLIC_API_BASE_URL` is set correctly
-- **CORS errors:** Ensure backend `EB_ORIGIN` includes your Railway domain
-- **Static export issues:** Verify `next.config.ts` has `output: 'export'`
-
-### Custom Domain (Optional)
-
-1. In Railway dashboard, go to Settings → Domains
-2. Add your custom domain
-3. Update DNS records as instructed
-4. Update backend `EB_ORIGIN` with your custom domain
 
 ### Monitoring
 
