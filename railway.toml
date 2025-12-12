@@ -11,5 +11,4 @@ healthcheckTimeout = 100
 
 [env]
 NODE_ENV = "production"
-PORT = "3000"
 
