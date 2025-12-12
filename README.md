@@ -74,7 +74,7 @@ For detailed step-by-step instructions including custom domain setup (`crm.gaadi
    - AWS EB → Configuration → Software → Set:
      ```
      EB_ORIGIN=https://crm.gaadimech.com,http://crm.gaadimech.com
-     ```
+   ```
 
 ### Configuration Files
 
