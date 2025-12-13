@@ -275,7 +275,7 @@ export default function AdminLeadsPage() {
                   onChange={(e) => setParseText(e.target.value)}
                   placeholder="Paste customer message here..."
                   rows={5}
-                  className="w-full px-3 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm touch-manipulation"
+                  className="w-full px-3 py-3 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-sm touch-manipulation text-zinc-900"
                 />
                 <button
                   onClick={handleParseText}
@@ -311,8 +311,8 @@ export default function AdminLeadsPage() {
                     }
                     required
                     pattern="(\+91[0-9]{10}|[0-9]{10}|91[0-9]{10})"
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
-                    placeholder="+917404625111 or 7404625111"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
+                    placeholder="+91"
                   />
                 </div>
 
@@ -326,7 +326,7 @@ export default function AdminLeadsPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, customer_name: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     placeholder="Enter customer name"
                   />
                 </div>
@@ -341,8 +341,8 @@ export default function AdminLeadsPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, car_model: e.target.value }))
                     }
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
-                    placeholder="e.g., Maruti Celerio, Hyundai i20"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
+                    placeholder="Car Model"
                   />
                 </div>
 
@@ -356,7 +356,7 @@ export default function AdminLeadsPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, pickup_type: e.target.value }))
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     >
                       <option value="">Select</option>
                       <option value="Pickup">Pickup</option>
@@ -372,7 +372,7 @@ export default function AdminLeadsPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, service_type: e.target.value }))
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     >
                       <option value="">Select</option>
                       <option value="Express Car Service">Express Service</option>
@@ -395,7 +395,7 @@ export default function AdminLeadsPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, scheduled_date: e.target.value }))
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     />
                   </div>
                   <div>
@@ -407,7 +407,7 @@ export default function AdminLeadsPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, source: e.target.value }))
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     >
                       <option value="Website">Website</option>
                       <option value="WhatsApp">WhatsApp</option>
@@ -436,7 +436,7 @@ export default function AdminLeadsPage() {
                       setFormData((prev) => ({ ...prev, remarks: e.target.value }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     placeholder="Notes or remarks (use mic for voice)"
                   />
                 </div>
@@ -451,7 +451,7 @@ export default function AdminLeadsPage() {
                       setFormData((prev) => ({ ...prev, assign_to: e.target.value }))
                     }
                     required
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   >
                     <option value="">Select team member</option>
                     {teamMembers.map((member) => (
@@ -483,14 +483,14 @@ export default function AdminLeadsPage() {
                 type="date"
                 value={createdDate}
                 onChange={(e) => setCreatedDate(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl touch-manipulation text-zinc-900"
               />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or car"
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl touch-manipulation text-zinc-900"
               />
             </div>
 

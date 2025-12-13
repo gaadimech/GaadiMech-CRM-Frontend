@@ -178,7 +178,7 @@ export default function WhatsAppTemplatesPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="e.g., Greeting, Follow-up"
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   required
                 />
               </div>
@@ -193,7 +193,7 @@ export default function WhatsAppTemplatesPage() {
                   }
                   placeholder="Enter the message template..."
                   rows={5}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   required
                 />
               </div>

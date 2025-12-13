@@ -180,7 +180,7 @@ export default function LeadDetailDialog({
                   onChange={(e) =>
                     setFormData({ ...formData, customer_name: e.target.value })
                   }
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
                 />
               </div>
               <div>
@@ -194,8 +194,8 @@ export default function LeadDetailDialog({
                     setFormData({ ...formData, mobile: e.target.value })
                   }
                   pattern="(\+91[0-9]{10}|[0-9]{10}|91[0-9]{10})"
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
-                  placeholder="+917404625111 or 7404625111"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
+                  placeholder="+91"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -209,7 +209,7 @@ export default function LeadDetailDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, car_registration: e.target.value })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div>
@@ -222,8 +222,8 @@ export default function LeadDetailDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, car_model: e.target.value })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
-                    placeholder="e.g., Maruti Celerio"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
+                    placeholder="Car Model"
                   />
                 </div>
               </div>
@@ -238,7 +238,7 @@ export default function LeadDetailDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, followup_date: e.target.value })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div>
@@ -250,7 +250,7 @@ export default function LeadDetailDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value as LeadStatus })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
                   >
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
@@ -279,7 +279,7 @@ export default function LeadDetailDialog({
                     setFormData({ ...formData, remarks: e.target.value })
                   }
                   rows={4}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation text-zinc-900"
                   placeholder="Use mic for voice input"
                 />
               </div>

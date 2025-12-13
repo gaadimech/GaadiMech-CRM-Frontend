@@ -281,7 +281,7 @@ export default function PasswordManagerPage() {
                       setNewUserData({ ...newUserData, username: e.target.value })
                     }
                     placeholder="Enter username"
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div>
@@ -295,7 +295,7 @@ export default function PasswordManagerPage() {
                       setNewUserData({ ...newUserData, name: e.target.value })
                     }
                     placeholder="Enter full name"
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div>
@@ -309,7 +309,7 @@ export default function PasswordManagerPage() {
                       setNewUserData({ ...newUserData, password: e.target.value })
                     }
                     placeholder="Min 6 characters"
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div>
@@ -326,7 +326,7 @@ export default function PasswordManagerPage() {
                       })
                     }
                     placeholder="Confirm password"
-                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -399,7 +399,7 @@ export default function PasswordManagerPage() {
                           newPassword: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     />
                     <input
                       type="password"
@@ -411,7 +411,7 @@ export default function PasswordManagerPage() {
                           confirmPassword: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     />
                     <div className="flex gap-2">
                       <button
@@ -497,7 +497,7 @@ export default function PasswordManagerPage() {
                                 newPassword: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-zinc-900"
                           />
                           <input
                             type="password"
@@ -509,7 +509,7 @@ export default function PasswordManagerPage() {
                                 confirmPassword: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:ring-2 focus:ring-zinc-900 focus:border-transparent text-zinc-900"
                           />
                           <div className="flex gap-2">
                             <button

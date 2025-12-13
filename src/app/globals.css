@@ -54,6 +54,45 @@ button {
 /* Better input styling on iOS */
 input, select, textarea {
   font-size: 16px; /* Prevents iOS zoom on focus */
+  color: #000000; /* Black text for actual input values - ensures clear visibility */
+}
+
+/* Placeholder text styling - darker gray for better visibility on mobile */
+input::placeholder,
+textarea::placeholder {
+  color: #52525b; /* zinc-600 - darker gray for better visibility */
+  opacity: 1; /* Ensure full opacity */
+}
+
+/* Webkit placeholder styling */
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #52525b;
+  opacity: 1;
+}
+
+/* Firefox placeholder styling */
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: #52525b;
+  opacity: 1;
+}
+
+/* Edge placeholder styling */
+input::-ms-input-placeholder,
+textarea::-ms-input-placeholder {
+  color: #52525b;
+  opacity: 1;
+}
+
+/* Select dropdown text color */
+select {
+  color: #000000; /* Black text for selected option */
+}
+
+select option {
+  color: #000000; /* Black text for all options */
+  background-color: #ffffff; /* White background */
 }
 
 /* Fix for iOS safe area */

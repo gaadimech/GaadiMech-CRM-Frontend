@@ -178,7 +178,7 @@ export default function FollowupsPage() {
                   name="user_id"
                   value={filters.user_id}
                   onChange={handleFilterChange}
-                  className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white touch-manipulation"
+                  className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent bg-white touch-manipulation text-zinc-900"
                 >
                   <option value="">All Team Members</option>
                   {teamMembers.map((member) => (
@@ -199,7 +199,7 @@ export default function FollowupsPage() {
                 value={filters.search}
                 onChange={handleFilterChange}
                 placeholder="Name, mobile, car..."
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
               />
             </div>
             <div>
@@ -211,7 +211,7 @@ export default function FollowupsPage() {
                 name="followup_date"
                 value={filters.followup_date}
                 onChange={handleFilterChange}
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
               />
             </div>
             <div>
@@ -223,7 +223,7 @@ export default function FollowupsPage() {
                 name="created_date"
                 value={filters.created_date}
                 onChange={handleFilterChange}
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ export default function FollowupsPage() {
                 value={filters.car_registration}
                 onChange={handleFilterChange}
                 placeholder="Registration number"
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
               />
             </div>
             <div>
@@ -247,7 +247,7 @@ export default function FollowupsPage() {
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 text-sm border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>

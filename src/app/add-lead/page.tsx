@@ -107,7 +107,7 @@ export default function AddLeadPage() {
                 value={formData.customer_name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                 placeholder="Enter customer name"
               />
             </div>
@@ -127,8 +127,8 @@ export default function AddLeadPage() {
                 onChange={handleChange}
                 required
                 pattern="(\+91[0-9]{10}|[0-9]{10}|91[0-9]{10})"
-                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
-                placeholder="+917404625111 or 7404625111"
+                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
+                placeholder="+91"
               />
             </div>
 
@@ -146,7 +146,7 @@ export default function AddLeadPage() {
                   type="text"
                   value={formData.car_registration}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   placeholder="Registration no."
                 />
               </div>
@@ -164,8 +164,8 @@ export default function AddLeadPage() {
                   type="text"
                   value={formData.car_model}
                   onChange={handleChange}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
-                  placeholder="e.g., Maruti Celerio"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
+                  placeholder="Car Model"
                 />
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function AddLeadPage() {
                   value={formData.followup_date}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export default function AddLeadPage() {
                   value={formData.status}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                 >
                   {STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>
@@ -235,7 +235,7 @@ export default function AddLeadPage() {
                 value={formData.remarks}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                 placeholder="Notes or comments (use mic for voice)"
               />
             </div>

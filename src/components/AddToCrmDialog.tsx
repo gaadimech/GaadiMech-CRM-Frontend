@@ -204,7 +204,7 @@ export default function AddToCrmDialog({
                   onChange={(e) =>
                     setFormData({ ...formData, customer_name: e.target.value })
                   }
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   placeholder="Enter customer name"
                   required
                 />
@@ -221,8 +221,8 @@ export default function AddToCrmDialog({
                     setFormData({ ...formData, mobile: e.target.value })
                   }
                   pattern="(\+91[0-9]{10}|[0-9]{10}|91[0-9]{10})"
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
-                  placeholder="+917404625111 or 7404625111"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
+                  placeholder="+91"
                   required
                 />
               </div>
@@ -241,7 +241,7 @@ export default function AddToCrmDialog({
                         car_registration: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     placeholder="Registration"
                   />
                 </div>
@@ -256,7 +256,7 @@ export default function AddToCrmDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, car_model: e.target.value })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     placeholder="e.g., Maruti Swift"
                   />
                 </div>
@@ -273,7 +273,7 @@ export default function AddToCrmDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, followup_date: e.target.value })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     required
                   />
                 </div>
@@ -290,7 +290,7 @@ export default function AddToCrmDialog({
                         status: e.target.value as LeadStatus,
                       })
                     }
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                     required
                   >
                     {STATUS_OPTIONS.map((status) => (
@@ -321,7 +321,7 @@ export default function AddToCrmDialog({
                     setFormData({ ...formData, remarks: e.target.value })
                   }
                   rows={3}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900 focus:border-transparent touch-manipulation text-zinc-900"
                   placeholder="Notes or remarks (use mic for voice)"
                 />
               </div>
