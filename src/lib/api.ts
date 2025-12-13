@@ -175,6 +175,16 @@ export async function fetchCurrentUser() {
   }>("/api/user/current");
 }
 
+export async function triggerSnapshot() {
+  return apiFetch<{
+    success: boolean;
+    message?: string;
+    data?: any;
+  }>("/api/trigger-snapshot", {
+    method: "POST",
+  });
+}
+
 export async function logout() {
   const API_BASE_LOGOUT =
     process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||

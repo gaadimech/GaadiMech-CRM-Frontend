@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import StatusBadge from "../../components/StatusBadge";
 import ActionButtons from "../../components/ActionButtons";
 import LeadDetailDialog from "../../components/LeadDetailDialog";
-import { fetchQueue, fetchTeamMembers, fetchCurrentUser } from "../../lib/api";
+import { fetchQueue, fetchTeamMembers, fetchCurrentUser, triggerSnapshot } from "../../lib/api";
 import type { QueueItem } from "../../lib/types";
 import { getTodayIST, formatDateIST, formatDateTimeIST } from "../../lib/dateUtils";
 
@@ -68,6 +68,8 @@ export default function DashboardPage() {
   const [editingLead, setEditingLead] = useState<QueueItem | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [fixingCount, setFixingCount] = useState(false);
+  const [fixCountMessage, setFixCountMessage] = useState<string | null>(null);
 
   // Fetch current user and team members on mount
   useEffect(() => {
@@ -177,6 +179,35 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleFixCount() {
+    if (!isAdmin) {
+      setFixCountMessage("Only admins can fix counts");
+      setTimeout(() => setFixCountMessage(null), 3000);
+      return;
+    }
+
+    setFixingCount(true);
+    setFixCountMessage(null);
+    try {
+      const result = await triggerSnapshot();
+      if (result.success) {
+        setFixCountMessage("Count fixed successfully! Refreshing dashboard...");
+        // Reload dashboard to show updated counts
+        await loadDashboard();
+        setTimeout(() => setFixCountMessage(null), 3000);
+      } else {
+        setFixCountMessage(result.message || "Failed to fix count");
+        setTimeout(() => setFixCountMessage(null), 5000);
+      }
+    } catch (err: any) {
+      console.error("Failed to fix count:", err);
+      setFixCountMessage(err.message || "Failed to fix count");
+      setTimeout(() => setFixCountMessage(null), 5000);
+    } finally {
+      setFixingCount(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6">
@@ -208,6 +239,15 @@ export default function DashboardPage() {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="flex-1 sm:flex-none min-w-0 px-3 py-2.5 border border-zinc-300 rounded-xl text-sm touch-manipulation"
               />
+              {isAdmin && (
+                <button
+                  onClick={handleFixCount}
+                  disabled={fixingCount}
+                  className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition touch-manipulation"
+                >
+                  {fixingCount ? "Fixing..." : "Fix Count"}
+                </button>
+              )}
               <button
                 onClick={loadDashboard}
                 className="px-4 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-medium hover:bg-zinc-800 active:bg-zinc-700 transition touch-manipulation"
@@ -217,6 +257,17 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Fix Count Message */}
+        {fixCountMessage && (
+          <div className={`mb-4 p-3 rounded-xl text-sm ${
+            fixCountMessage.includes("successfully") 
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}>
+            {fixCountMessage}
+          </div>
+        )}
 
         {/* Metrics Cards */}
         {metrics && (
