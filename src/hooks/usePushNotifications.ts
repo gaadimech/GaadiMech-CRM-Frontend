@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getApiBase } from "../lib/apiBase";
 
 const API_BASE = getApiBase();
@@ -82,9 +82,12 @@ export function usePushNotifications() {
         if (keyResponse.ok) {
           const keyData = await keyResponse.json();
           vapidPublicKey = keyData.publicKey || "";
+        } else {
+          console.warn("Failed to fetch VAPID public key:", keyResponse.status);
         }
       } catch (error) {
         console.error("Error fetching VAPID public key:", error);
+        // Don't retry on error - just continue without key
       }
 
       if (!vapidPublicKey) {
@@ -191,13 +194,16 @@ export function usePushNotifications() {
     }
   }, [isSupported]);
 
-  // Initialize on mount
+  // Initialize on mount - only once
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (isSupported) {
+    if (isSupported && !initializedRef.current) {
+      initializedRef.current = true;
       registerServiceWorker();
       checkSubscription();
     }
-  }, [isSupported, registerServiceWorker, checkSubscription]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSupported]); // Only run once when isSupported becomes true
 
   return {
     isSupported,
@@ -212,7 +218,7 @@ export function usePushNotifications() {
 }
 
 // Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
@@ -222,7 +228,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  return outputArray;
+  return outputArray as BufferSource;
 }
 
 // Helper function to convert ArrayBuffer to base64
