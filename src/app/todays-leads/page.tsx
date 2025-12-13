@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AddToCrmDialog from "../../components/AddToCrmDialog";
+import WhatsAppTemplateModal from "../../components/WhatsAppTemplateModal";
 import { getTodayIST } from "../../lib/dateUtils";
 
 import { getApiBase } from "../../lib/apiBase";
@@ -45,6 +46,8 @@ export default function TodaysLeadsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
   const [showAddToCrmDialog, setShowAddToCrmDialog] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [selectedMobile, setSelectedMobile] = useState<string>("");
 
   useEffect(() => {
     loadLeads();
@@ -96,18 +99,25 @@ export default function TodaysLeadsPage() {
   }
 
   function handleWhatsApp(mobile: string) {
-    // Remove any non-digit characters except +
-    const cleanMobile = mobile.replace(/[^\d+]/g, "");
-    // Ensure it starts with country code
-    let whatsappNumber = cleanMobile;
-    if (!whatsappNumber.startsWith("+")) {
-      if (whatsappNumber.startsWith("91")) {
-        whatsappNumber = `+${whatsappNumber}`;
-      } else {
-        whatsappNumber = `+91${whatsappNumber}`;
-      }
+    setSelectedMobile(mobile);
+    setShowWhatsAppModal(true);
+  }
+
+  function whatsappHref(mobile: string, message?: string) {
+    const cleaned = mobile.replace(/[^\d]/g, "");
+    const withCountry = cleaned.length === 10 ? `91${cleaned}` : cleaned;
+    let url = `https://wa.me/${withCountry}`;
+    if (message) {
+      url += `?text=${encodeURIComponent(message)}`;
     }
-    window.open(`https://wa.me/${whatsappNumber.replace("+", "")}`, "_blank");
+    return url;
+  }
+
+  function handleTemplateSelect(message: string) {
+    const url = whatsappHref(selectedMobile, message);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setShowWhatsAppModal(false);
+    setSelectedMobile("");
   }
 
   function handleAddToCrm(assignmentId: number) {
@@ -359,6 +369,17 @@ export default function TodaysLeadsPage() {
           setSelectedAssignmentId(null);
         }}
         onSuccess={handleAddToCrmSuccess}
+      />
+
+      {/* WhatsApp Template Modal */}
+      <WhatsAppTemplateModal
+        mobile={selectedMobile}
+        isOpen={showWhatsAppModal}
+        onClose={() => {
+          setShowWhatsAppModal(false);
+          setSelectedMobile("");
+        }}
+        onSelectTemplate={handleTemplateSelect}
       />
     </div>
   );

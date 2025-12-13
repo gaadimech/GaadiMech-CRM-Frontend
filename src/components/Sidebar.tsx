@@ -85,13 +85,12 @@ export default function Sidebar() {
     // Initial check with a small delay to avoid race conditions
     const timeoutId = setTimeout(checkUser, 100);
     
-    // Re-check periodically to catch session updates
-    const interval = setInterval(checkUser, 5000);
+    // Note: Removed periodic polling - user status is checked by ProtectedRoute
+    // and doesn't need to be polled every 5 seconds
     
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
-      clearInterval(interval);
     };
   }, []);
 

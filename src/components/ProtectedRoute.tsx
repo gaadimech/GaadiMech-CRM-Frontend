@@ -34,8 +34,9 @@ export default function ProtectedRoute({
     }
 
     // Prevent multiple simultaneous checks and rate limiting
+    // Increased throttle to 5 seconds to reduce unnecessary API calls
     const now = Date.now();
-    if (checkInProgress.current || now - lastCheckTime.current < 2000) {
+    if (checkInProgress.current || now - lastCheckTime.current < 5000) {
       return;
     }
 

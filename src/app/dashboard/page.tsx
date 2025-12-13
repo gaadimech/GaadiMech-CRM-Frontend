@@ -93,9 +93,8 @@ export default function DashboardPage() {
       }
     }
     loadUserAndTeam();
-    // Re-check periodically
-    const interval = setInterval(loadUserAndTeam, 10000);
-    return () => clearInterval(interval);
+    // Note: Removed periodic polling - user status doesn't need to be checked every 10 seconds
+    // ProtectedRoute handles authentication checks
   }, []);
 
   useEffect(() => {
