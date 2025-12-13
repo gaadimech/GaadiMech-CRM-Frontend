@@ -62,15 +62,28 @@ export default function AddLeadPage() {
         credentials: "include",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
         },
         body: formDataToSend.toString(),
       });
 
-      if (res.ok) {
-        router.push("/dashboard");
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        // Handle JSON response
+        const data = await res.json();
+        if (data.success) {
+          router.push("/dashboard");
+        } else {
+          setError(data.error || "Failed to add lead. Please try again.");
+        }
       } else {
-        const text = await res.text();
-        setError(text || "Failed to add lead. Please try again.");
+        // Handle non-JSON response (fallback for old backend behavior)
+        if (res.ok) {
+          router.push("/dashboard");
+        } else {
+          const text = await res.text();
+          setError(text || "Failed to add lead. Please try again.");
+        }
       }
     } catch (err) {
       setError("Error adding lead. Please try again.");

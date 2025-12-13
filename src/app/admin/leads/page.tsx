@@ -20,6 +20,8 @@ interface UnassignedLead {
   created_at: string;
   assigned_to?: string;
   added_to_crm?: boolean; // Track if lead has been added to CRM
+  assigned_date?: string; // Date when lead was assigned
+  assignment_id?: number; // TeamAssignment ID
 }
 
 interface TeamMember {
@@ -54,16 +56,12 @@ export default function AdminLeadsPage() {
     };
   });
   const [search, setSearch] = useState("");
-  const [createdDate, setCreatedDate] = useState(() => {
-    // Set default to today's date in YYYY-MM-DD format
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  });
+  const [createdDate, setCreatedDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingLeadId, setDeletingLeadId] = useState<number | null>(null);
+  const [selectedLead, setSelectedLead] = useState<UnassignedLead | null>(null);
+  const [leadDetails, setLeadDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -250,6 +248,42 @@ export default function AdminLeadsPage() {
       loadData();
     } finally {
       setDeletingLeadId(null);
+    }
+  }
+
+  async function handleLeadClick(lead: UnassignedLead) {
+    setSelectedLead(lead);
+    setLoadingDetails(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/unassigned-leads/${lead.id}/details`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLeadDetails(data);
+      } else {
+        console.error("Failed to load lead details");
+        setLeadDetails(null);
+      }
+    } catch (err) {
+      console.error("Error loading lead details:", err);
+      setLeadDetails(null);
+    } finally {
+      setLoadingDetails(false);
+    }
+  }
+
+  function formatDate(dateStr: string | null | undefined) {
+    if (!dateStr) return "—";
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
     }
   }
 
@@ -503,7 +537,8 @@ export default function AdminLeadsPage() {
                 {unassignedLeads.map((lead) => (
                   <div
                     key={lead.id}
-                    className="p-3.5 border border-zinc-200 rounded-xl hover:bg-zinc-50 active:bg-zinc-100 transition touch-manipulation"
+                    onClick={() => handleLeadClick(lead)}
+                    className="p-3.5 border border-zinc-200 rounded-xl hover:bg-zinc-50 active:bg-zinc-100 transition touch-manipulation cursor-pointer"
                   >
                     <div className="flex flex-col gap-2">
                       <div className="flex items-start justify-between gap-2">
@@ -536,7 +571,13 @@ export default function AdminLeadsPage() {
                         {lead.car_model || 'No car info'} • {lead.service_type}
                       </p>
                       
-                      <div className="flex gap-2 pt-2 border-t border-zinc-100">
+                      {lead.assigned_date && (
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Assigned on {formatDate(lead.assigned_date)}
+                        </p>
+                      )}
+                      
+                      <div className="flex gap-2 pt-2 border-t border-zinc-100" onClick={(e) => e.stopPropagation()}>
                         <a
                           href={`tel:${lead.mobile}`}
                           className="flex-1 px-3 py-2 bg-zinc-900 text-white text-xs font-medium rounded-lg text-center hover:bg-zinc-800 active:bg-zinc-700 transition touch-manipulation"
@@ -559,6 +600,162 @@ export default function AdminLeadsPage() {
           </div>
         </div>
       </div>
+
+      {/* Lead Details Modal */}
+      {selectedLead && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-zinc-900/20" 
+          onClick={() => setSelectedLead(null)}
+        >
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-zinc-900">Lead Details</h2>
+                <button
+                  onClick={() => setSelectedLead(null)}
+                  className="text-zinc-400 hover:text-zinc-600 transition"
+                >
+                  <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {loadingDetails ? (
+                <div className="text-center py-8 text-zinc-500">Loading details...</div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Basic Information */}
+                  {leadDetails?.lead && (
+                    <div className="border-b border-zinc-200 pb-4">
+                      <h3 className="text-sm font-semibold text-zinc-700 mb-3">Basic Information</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-zinc-500 mb-1">Customer Name</p>
+                          <p className="text-zinc-900 font-medium">{leadDetails.lead.customer_name || "Unnamed"}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 mb-1">Mobile</p>
+                          <a href={`tel:${leadDetails.lead.mobile}`} className="text-blue-600 font-medium hover:underline">
+                            {leadDetails.lead.mobile}
+                          </a>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 mb-1">Car Model</p>
+                          <p className="text-zinc-900">{leadDetails.lead.car_model || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 mb-1">Service Type</p>
+                          <p className="text-zinc-900">{leadDetails.lead.service_type || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 mb-1">Pickup Type</p>
+                          <p className="text-zinc-900">{leadDetails.lead.pickup_type || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-zinc-500 mb-1">Source</p>
+                          <p className="text-zinc-900">{leadDetails.lead.source || "—"}</p>
+                        </div>
+                        {leadDetails.lead.scheduled_date && (
+                          <div>
+                            <p className="text-zinc-500 mb-1">Scheduled Date</p>
+                            <p className="text-zinc-900">{formatDate(leadDetails.lead.scheduled_date)}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-zinc-500 mb-1">Created At</p>
+                          <p className="text-zinc-900">{formatDate(leadDetails.lead.created_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assignment Information */}
+                  {leadDetails?.assignment?.assigned_to && (
+                    <div className="border-b border-zinc-200 pb-4">
+                      <h3 className="text-sm font-semibold text-zinc-700 mb-3">Assignment</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-zinc-500 mb-1">Assigned To</p>
+                          <p className="text-zinc-900 font-medium">{leadDetails.assignment.assigned_to}</p>
+                        </div>
+                        {leadDetails.assignment.assigned_date && (
+                          <div>
+                            <p className="text-zinc-500 mb-1">Assigned Date</p>
+                            <p className="text-zinc-900">{formatDate(leadDetails.assignment.assigned_date)}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-zinc-500 mb-1">Status</p>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            leadDetails.assignment.added_to_crm 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {leadDetails.assignment.added_to_crm ? "Added to CRM" : leadDetails.assignment.status || "Pending"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Original Remarks */}
+                  {leadDetails?.lead?.remarks && (
+                    <div className="border-b border-zinc-200 pb-4">
+                      <h3 className="text-sm font-semibold text-zinc-700 mb-3">Original Remarks</h3>
+                      <p className="text-sm text-zinc-700 whitespace-pre-wrap">{leadDetails.lead.remarks}</p>
+                    </div>
+                  )}
+
+                  {/* CRM Details (if added to CRM) */}
+                  {leadDetails?.crm_lead && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-zinc-700 mb-3">CRM Details</h3>
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-zinc-500 mb-1">Status</p>
+                            <p className="text-zinc-900 font-medium">{leadDetails.crm_lead.status}</p>
+                          </div>
+                          {leadDetails.crm_lead.followup_date && (
+                            <div>
+                              <p className="text-zinc-500 mb-1">Followup Date</p>
+                              <p className="text-zinc-900">{formatDate(leadDetails.crm_lead.followup_date)}</p>
+                            </div>
+                          )}
+                          {leadDetails.crm_lead.car_registration && (
+                            <div>
+                              <p className="text-zinc-500 mb-1">Car Registration</p>
+                              <p className="text-zinc-900">{leadDetails.crm_lead.car_registration}</p>
+                            </div>
+                          )}
+                          {leadDetails.crm_lead.modified_at && (
+                            <div>
+                              <p className="text-zinc-500 mb-1">Last Modified</p>
+                              <p className="text-zinc-900">{formatDate(leadDetails.crm_lead.modified_at)}</p>
+                            </div>
+                          )}
+                        </div>
+                        {leadDetails.crm_lead.remarks && (
+                          <div>
+                            <p className="text-zinc-500 mb-1 text-sm">CRM Remarks</p>
+                            <p className="text-sm text-zinc-700 whitespace-pre-wrap bg-white p-3 rounded-lg border border-green-200">
+                              {leadDetails.crm_lead.remarks}
+                            </p>
+                          </div>
+                        )}
+                        {!leadDetails.crm_lead.remarks && (
+                          <p className="text-sm text-zinc-500 italic">No remarks added in CRM</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

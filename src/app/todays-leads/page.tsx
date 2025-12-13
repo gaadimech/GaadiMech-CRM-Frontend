@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import AddToCrmDialog from "../../components/AddToCrmDialog";
 import WhatsAppTemplateModal from "../../components/WhatsAppTemplateModal";
-import { getTodayIST } from "../../lib/dateUtils";
-
+import { formatDateIST } from "../../lib/dateUtils";
 import { getApiBase } from "../../lib/apiBase";
 
 const API_BASE = getApiBase();
@@ -41,8 +40,9 @@ export default function TodaysLeadsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedDate, setSelectedDate] = useState(getTodayIST());
+  const [selectedDate, setSelectedDate] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "added_to_crm">("all");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
   const [showAddToCrmDialog, setShowAddToCrmDialog] = useState(false);
@@ -51,7 +51,7 @@ export default function TodaysLeadsPage() {
 
   useEffect(() => {
     loadLeads();
-  }, [selectedDate, search]);
+  }, [selectedDate, search, statusFilter]);
 
   async function loadLeads() {
     setLoading(true);
@@ -63,6 +63,9 @@ export default function TodaysLeadsPage() {
       }
       if (search) {
         params.append("search", search);
+      }
+      if (statusFilter !== "all") {
+        params.append("status_filter", statusFilter);
       }
 
       const res = await fetch(`${API_BASE}/api/team-leads?${params.toString()}`, {
@@ -130,19 +133,32 @@ export default function TodaysLeadsPage() {
   }
 
   function handleClearFilters() {
-    setSelectedDate(getTodayIST());
+    setSelectedDate("");
     setSearch("");
+    setStatusFilter("all");
   }
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return "";
     try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      // If it's already in YYYY-MM-DD format, convert it to a proper date string for formatDateIST
+      // formatDateIST expects ISO datetime, so we'll create a date at noon IST to avoid timezone issues
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        // Date string in YYYY-MM-DD format - create date at noon IST to avoid timezone conversion issues
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        // Format as day month (e.g., "13 Dec")
+        return date.toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+        });
+      } else {
+        // ISO datetime string - use formatDateIST
+        const formatted = formatDateIST(dateStr);
+        // Extract just day and month (e.g., "13 Dec")
+        const parts = formatted.split(" ");
+        return `${parts[0]} ${parts[1]}`;
+      }
     } catch {
       return dateStr;
     }
@@ -162,22 +178,37 @@ export default function TodaysLeadsPage() {
 
         {/* Statistics Cards - 2x2 grid on mobile */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm">
+          <button
+            onClick={() => setStatusFilter("all")}
+            className={`bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm transition-all ${
+              statusFilter === "all" ? "ring-4 ring-purple-300 ring-offset-2" : "hover:opacity-90 active:opacity-80"
+            } touch-manipulation`}
+          >
             <div className="text-2xl sm:text-3xl font-bold">{statistics.total_assigned}</div>
             <div className="text-xs sm:text-sm opacity-90">Total Assigned</div>
-          </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm">
+          </button>
+          <button
+            onClick={() => setStatusFilter("pending")}
+            className={`bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm transition-all ${
+              statusFilter === "pending" ? "ring-4 ring-yellow-300 ring-offset-2" : "hover:opacity-90 active:opacity-80"
+            } touch-manipulation`}
+          >
             <div className="text-2xl sm:text-3xl font-bold">{statistics.pending}</div>
             <div className="text-xs sm:text-sm opacity-90">Pending</div>
-          </div>
+          </button>
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm">
             <div className="text-2xl sm:text-3xl font-bold">{statistics.contacted}</div>
             <div className="text-xs sm:text-sm opacity-90">Contacted</div>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm">
+          <button
+            onClick={() => setStatusFilter("added_to_crm")}
+            className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-3.5 sm:p-4 text-white shadow-sm transition-all ${
+              statusFilter === "added_to_crm" ? "ring-4 ring-green-300 ring-offset-2" : "hover:opacity-90 active:opacity-80"
+            } touch-manipulation`}
+          >
             <div className="text-2xl sm:text-3xl font-bold">{statistics.added_to_crm}</div>
             <div className="text-xs sm:text-sm opacity-90">Added to CRM</div>
-          </div>
+          </button>
         </div>
 
         {/* Filters */}
@@ -251,7 +282,7 @@ export default function TodaysLeadsPage() {
           <div className="text-center py-12 text-zinc-500">Loading leads...</div>
         ) : leads.length === 0 ? (
           <div className="bg-white rounded-2xl border border-zinc-200 p-8 sm:p-12 text-center shadow-sm">
-            <p className="text-zinc-600">No leads found for the selected date.</p>
+            <p className="text-zinc-600">No leads found{selectedDate ? " for the selected date" : ""}.</p>
           </div>
         ) : (
           <div className="space-y-3">
