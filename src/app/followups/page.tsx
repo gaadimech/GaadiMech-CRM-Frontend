@@ -343,6 +343,9 @@ export default function FollowupsPage() {
                       {lead.remarks && (
                         <p className="text-zinc-600 line-clamp-1">{lead.remarks}</p>
                       )}
+                      {isAdmin && lead.creator_name && (
+                        <p className="text-zinc-500">Created by: {lead.creator_name}</p>
+                      )}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-zinc-100" onClick={(e) => e.stopPropagation()}>
@@ -386,6 +389,11 @@ export default function FollowupsPage() {
                       <th className="text-left py-3 px-4 text-zinc-700 font-medium">
                         Remarks
                       </th>
+                      {isAdmin && (
+                        <th className="text-left py-3 px-4 text-zinc-700 font-medium">
+                          Created By
+                        </th>
+                      )}
                       <th className="text-left py-3 px-4 text-zinc-700 font-medium">
                         Actions
                       </th>
@@ -419,6 +427,11 @@ export default function FollowupsPage() {
                         <td className="py-3 px-4 text-zinc-600 max-w-xs truncate">
                           {lead.remarks || "—"}
                         </td>
+                        {isAdmin && (
+                          <td className="py-3 px-4 text-zinc-700">
+                            {lead.creator_name || "—"}
+                          </td>
+                        )}
                         <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-2">
                             <ActionButtons lead={lead} compact />

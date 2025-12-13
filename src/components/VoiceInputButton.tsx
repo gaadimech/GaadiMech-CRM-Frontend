@@ -18,7 +18,8 @@ export default function VoiceInputButton({
 }: VoiceInputButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const sessionStartValueRef = useRef(currentValue);
-  const lastTranscriptRef = useRef("");
+  const sessionAccumulatedTextRef = useRef(""); // Accumulate text within current session
+  const isActiveSessionRef = useRef(false); // Track if we're in an active listening session
 
   const {
     isListening,
@@ -28,8 +29,23 @@ export default function VoiceInputButton({
     stopListening,
     reset,
   } = useSpeechRecognition({
-    onResult: (finalText) => {
-      // Final results are handled through the transcript useEffect
+    onResult: (newFinalText) => {
+      // Only process results if we're in an active session
+      // This prevents processing results from previous sessions
+      if (!isActiveSessionRef.current) {
+        return;
+      }
+      
+      // Only called with NEW final results, not accumulated ones
+      // Accumulate new text within this session
+      sessionAccumulatedTextRef.current += (sessionAccumulatedTextRef.current ? " " : "") + newFinalText;
+      
+      // Update parent with base value + accumulated session text
+      const base = sessionStartValueRef.current;
+      const fullText = base 
+        ? `${base}\n${sessionAccumulatedTextRef.current}` 
+        : sessionAccumulatedTextRef.current;
+      onTranscript(fullText);
     },
     onError: (errorMsg) => {
       console.error("Speech recognition error:", errorMsg);
@@ -54,37 +70,26 @@ export default function VoiceInputButton({
     if (disabled) return;
 
     if (isListening) {
+      // Mark session as inactive first to prevent any late-arriving results
+      isActiveSessionRef.current = false;
+      // Stop listening - session accumulated text is already in the field
       stopListening();
-      lastTranscriptRef.current = "";
+      // Clear session accumulator for next session
+      sessionAccumulatedTextRef.current = "";
     } else {
       // Store the starting value when we begin listening
+      // This ensures we append to existing content, not replace it
       sessionStartValueRef.current = currentValue;
-      lastTranscriptRef.current = "";
+      // Clear any previous session's accumulated text
+      sessionAccumulatedTextRef.current = "";
+      // Mark session as active before starting
+      isActiveSessionRef.current = true;
+      // Reset the recognition state to clear any previous session data
       reset();
+      // Start a fresh listening session
       startListening();
     }
   };
-
-  // Update transcript in real-time
-  useEffect(() => {
-    if (isListening && transcript) {
-      // Only update if transcript has changed
-      if (transcript !== lastTranscriptRef.current) {
-        const base = sessionStartValueRef.current;
-        // Combine base value with current transcript
-        const fullText = base ? `${base}\n${transcript}` : transcript;
-        
-        // Update tracking
-        lastTranscriptRef.current = transcript;
-        
-        // Update the parent component
-        onTranscript(fullText);
-      }
-    } else if (!isListening) {
-      // Reset when not listening
-      lastTranscriptRef.current = "";
-    }
-  }, [transcript, isListening, onTranscript]);
 
   // Size classes
   const sizeClasses = {

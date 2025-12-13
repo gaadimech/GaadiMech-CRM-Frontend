@@ -351,6 +351,14 @@ export default function LeadDetailDialog({
                     {lead.modified_at ? formatDateTimeIST(lead.modified_at) : "—"}
                   </p>
                 </div>
+                {isAdmin && (
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-0.5">Created By</p>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {lead.creator_name || "—"}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="pt-3 border-t border-zinc-100">
                 <p className="text-xs text-zinc-500 mb-1">Remarks</p>

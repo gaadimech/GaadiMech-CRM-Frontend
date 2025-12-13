@@ -71,9 +71,10 @@ export function useSpeechRecognition({
       const fullTranscript = (finalTranscriptRef.current.trim() + " " + interimTranscript).trim();
       setTranscript(fullTranscript);
       
-      // Call onResult only when we have new final results
+      // Call onResult only with NEW final results, not the entire accumulated transcript
+      // This prevents repeated typing of the same text
       if (onResult && newFinalTranscript.trim()) {
-        onResult(finalTranscriptRef.current.trim());
+        onResult(newFinalTranscript.trim());
       }
     };
 
@@ -109,6 +110,8 @@ export function useSpeechRecognition({
 
     recognition.onend = () => {
       setIsListening(false);
+      // Don't clear transcript on end - let the user see what was transcribed
+      // The reset will be called explicitly when starting a new session
     };
 
     recognitionRef.current = recognition;
@@ -131,14 +134,49 @@ export function useSpeechRecognition({
       return;
     }
 
+    // Reset all state before starting a new session
+    // This ensures we don't carry over any previous session data
+    finalTranscriptRef.current = "";
+    lastResultIndexRef.current = 0;
+    setTranscript("");
+    setError(null);
+
     try {
-      finalTranscriptRef.current = "";
-      lastResultIndexRef.current = 0;
-      setTranscript("");
+      // Try to start recognition
       recognitionRef.current.start();
     } catch (err: any) {
-      if (err.message?.includes("already started")) {
-        // Already listening, ignore
+      // If already started, stop it first and try again
+      if (err.message?.includes("already started") || err.message?.includes("started")) {
+        try {
+          recognitionRef.current.stop();
+          // Wait a bit for it to fully stop, then start again
+          setTimeout(() => {
+            if (recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (retryErr) {
+                setError("Failed to start speech recognition");
+                if (onError) {
+                  onError("Failed to start speech recognition");
+                }
+              }
+            }
+          }, 100);
+        } catch (stopErr) {
+          // If stop fails, just try to start anyway
+          setTimeout(() => {
+            if (recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (retryErr) {
+                setError("Failed to start speech recognition");
+                if (onError) {
+                  onError("Failed to start speech recognition");
+                }
+              }
+            }
+          }, 200);
+        }
         return;
       }
       setError("Failed to start speech recognition");
