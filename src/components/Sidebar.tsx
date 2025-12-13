@@ -30,6 +30,10 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
     async function checkUser() {
       try {
         const res = await fetch(`${API_BASE}/api/user/current`, {
@@ -38,6 +42,8 @@ export default function Sidebar() {
         });
         if (res.ok) {
           const data = await res.json();
+          if (!isMounted) return;
+          
           console.log("[Sidebar] User data from API:", data);
           console.log("[Sidebar] is_admin value:", data.is_admin, "Type:", typeof data.is_admin);
           // More robust admin check - handle boolean true, string "true", number 1, etc.
@@ -50,19 +56,43 @@ export default function Sidebar() {
           setIsAdmin(isAdminValue);
           setUserName(data.name || data.username || "User");
           console.log("[Sidebar] isAdmin state set to:", isAdminValue);
+          retryCount = 0; // Reset retry count on success
         } else {
-          console.error("[Sidebar] Failed to get user data:", res.status, await res.text());
-          setIsAdmin(false);
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.warn(`[Sidebar] Failed to get user data (attempt ${retryCount}/${maxRetries}):`, res.status);
+          } else {
+            console.error("[Sidebar] Failed to get user data after retries:", res.status);
+          }
+          if (isMounted) {
+            setIsAdmin(false);
+          }
         }
       } catch (err) {
-        console.error("[Sidebar] Error checking user:", err);
-        setIsAdmin(false);
+        if (retryCount < maxRetries) {
+          retryCount++;
+          // Only log after max retries to reduce console noise
+          if (retryCount === maxRetries) {
+            console.error("[Sidebar] Error checking user after retries:", err);
+          }
+        }
+        if (isMounted) {
+          setIsAdmin(false);
+        }
       }
     }
-    checkUser();
+    
+    // Initial check with a small delay to avoid race conditions
+    const timeoutId = setTimeout(checkUser, 100);
+    
     // Re-check periodically to catch session updates
     const interval = setInterval(checkUser, 5000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
   }, []);
 
   async function handleLogout() {

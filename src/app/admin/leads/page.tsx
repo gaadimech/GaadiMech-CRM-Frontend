@@ -112,40 +112,48 @@ export default function AdminLeadsPage() {
         body: JSON.stringify({ text: parseText }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      
+      if (res.ok && data.success && data.data) {
         setParseResult(data.data);
         // Auto-fill form if parsing successful
-        if (data.data && data.success) {
-          // Get today's date for default scheduled_date
-          const today = new Date();
-          const year = today.getFullYear();
-          const month = String(today.getMonth() + 1).padStart(2, '0');
-          const day = String(today.getDate()).padStart(2, '0');
-          const todayStr = `${year}-${month}-${day}`;
-          
-          // Combine manufacturer and model into single car_model field
-          let combinedCarModel = "";
-          if (data.data.car_manufacturer && data.data.car_model) {
-            combinedCarModel = `${data.data.car_manufacturer} ${data.data.car_model}`;
-          } else if (data.data.car_manufacturer) {
-            combinedCarModel = data.data.car_manufacturer;
-          } else if (data.data.car_model) {
-            combinedCarModel = data.data.car_model;
-          }
-          
-          setFormData((prev) => ({
-            ...prev,
-            mobile: data.data.mobile || prev.mobile,
-            customer_name: data.data.customer_name || prev.customer_name,
-            car_model: combinedCarModel || prev.car_model,
-            service_type: data.data.service_type || "Express Car Service", // Default to Express Car Service if not parsed
-            pickup_type: data.data.pickup_type || prev.pickup_type,
-            scheduled_date: todayStr, // Always use today's date, ignore parsed date
-            source: data.data.source || prev.source,
-            remarks: "", // Keep remarks empty by default
-          }));
+        // Get today's date for default scheduled_date
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
+        
+        // Combine manufacturer and model into single car_model field
+        let combinedCarModel = "";
+        if (data.data.car_manufacturer && data.data.car_model) {
+          combinedCarModel = `${data.data.car_manufacturer} ${data.data.car_model}`;
+        } else if (data.data.car_manufacturer) {
+          combinedCarModel = data.data.car_manufacturer;
+        } else if (data.data.car_model) {
+          combinedCarModel = data.data.car_model;
         }
+        
+        // Backend automatically handles default customer name if missing
+        // It will return a sequential name like "Customer 1", "Customer 2", etc.
+        // from a global database counter that ensures uniqueness across all users
+        
+        setFormData((prev) => ({
+          ...prev,
+          mobile: data.data.mobile || prev.mobile,
+          customer_name: data.data.customer_name || prev.customer_name,
+          car_model: combinedCarModel || prev.car_model,
+          service_type: data.data.service_type || "Express Car Service", // Default to Express Car Service if not parsed
+          pickup_type: data.data.pickup_type || prev.pickup_type,
+          scheduled_date: todayStr, // Always use today's date, ignore parsed date
+          source: data.data.source || prev.source,
+          remarks: "", // Keep remarks empty by default
+        }));
+      } else {
+        // Show error message if parsing failed
+        const errorMsg = data.message || 'Failed to parse text';
+        alert(errorMsg);
+        console.error('Parse error:', errorMsg);
       }
     } catch (err) {
       console.error("Failed to parse text:", err);
