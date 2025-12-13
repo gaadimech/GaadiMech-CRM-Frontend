@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ProtectedRoute from "../components/ProtectedRoute";
 import MainLayout from "../components/MainLayout";
+import PushNotificationManager from "../components/PushNotificationManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ProtectedRoute>
+          <PushNotificationManager />
           <MainLayout>{children}</MainLayout>
         </ProtectedRoute>
       </body>
