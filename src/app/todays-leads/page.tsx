@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import AddToCrmDialog from "../../components/AddToCrmDialog";
 import WhatsAppTemplateModal from "../../components/WhatsAppTemplateModal";
+import LeadDetailDialog from "../../components/LeadDetailDialog";
 import { formatDateIST } from "../../lib/dateUtils";
 import { getApiBase } from "../../lib/apiBase";
+import type { Lead } from "../../lib/types";
 
 const API_BASE = getApiBase();
 
@@ -19,6 +21,7 @@ interface TeamLead {
   source: string;
   status: string;
   added_to_crm: boolean;
+  lead_id: number | null; // Lead ID when added to CRM
   assigned_at: string | null;
   assigned_date: string | null;
 }
@@ -48,6 +51,9 @@ export default function TodaysLeadsPage() {
   const [showAddToCrmDialog, setShowAddToCrmDialog] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [selectedMobile, setSelectedMobile] = useState<string>("");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
+  const [isLoadingLead, setIsLoadingLead] = useState(false);
 
   useEffect(() => {
     loadLeads();
@@ -130,6 +136,41 @@ export default function TodaysLeadsPage() {
 
   function handleAddToCrmSuccess() {
     loadLeads();
+  }
+
+  async function handleEditLead(leadId: number) {
+    setIsLoadingLead(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/followups/${leadId}`, {
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.lead) {
+          setSelectedLead(data.lead);
+          setIsLeadDialogOpen(true);
+        } else {
+          alert("Failed to load lead details");
+        }
+      } else {
+        alert("Failed to load lead details");
+      }
+    } catch (err) {
+      console.error("Error loading lead:", err);
+      alert("Error loading lead details");
+    } finally {
+      setIsLoadingLead(false);
+    }
+  }
+
+  function handleLeadDialogClose() {
+    setIsLeadDialogOpen(false);
+    setSelectedLead(null);
+  }
+
+  function handleLeadDialogUpdate() {
+    loadLeads(); // Refresh the leads list after update
   }
 
   function handleClearFilters() {
@@ -373,6 +414,18 @@ export default function TodaysLeadsPage() {
                     </svg>
                     WhatsApp
                   </button>
+                  {lead.added_to_crm && lead.lead_id && (
+                    <button
+                      onClick={() => handleEditLead(lead.lead_id!)}
+                      disabled={isLoadingLead}
+                      className="flex-1 px-4 py-3 sm:py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 touch-manipulation"
+                    >
+                      <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      {isLoadingLead ? "Loading..." : "Edit Lead"}
+                    </button>
+                  )}
                   {!lead.added_to_crm && (
                     <button
                       onClick={() => handleAddToCrm(lead.assignment_id)}
@@ -411,6 +464,15 @@ export default function TodaysLeadsPage() {
           setSelectedMobile("");
         }}
         onSelectTemplate={handleTemplateSelect}
+      />
+
+      {/* Lead Detail Dialog for Editing */}
+      <LeadDetailDialog
+        lead={selectedLead}
+        isOpen={isLeadDialogOpen}
+        onClose={handleLeadDialogClose}
+        onUpdate={handleLeadDialogUpdate}
+        isAdmin={false}
       />
     </div>
   );
