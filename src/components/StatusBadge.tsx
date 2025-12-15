@@ -8,6 +8,7 @@ const statusColors: Record<LeadStatus, string> = {
   "Open": "bg-blue-100 text-blue-800",
   "Completed": "bg-emerald-100 text-emerald-800",
   "Feedback": "bg-orange-100 text-orange-800",
+  "Dead Lead": "bg-gray-100 text-gray-800",
 };
 
 export default function StatusBadge({ status }: { status: LeadStatus }) {

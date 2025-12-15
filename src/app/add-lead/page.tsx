@@ -17,6 +17,7 @@ const STATUS_OPTIONS: LeadStatus[] = [
   "Open",
   "Completed",
   "Feedback",
+  "Dead Lead",
 ];
 
 export default function AddLeadPage() {

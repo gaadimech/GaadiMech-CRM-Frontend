@@ -21,6 +21,7 @@ const STATUS_OPTIONS: LeadStatus[] = [
   "Open",
   "Completed",
   "Feedback",
+  "Dead Lead",
 ] as any;
 
 export default function FollowupsPage() {

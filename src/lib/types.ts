@@ -5,7 +5,8 @@ export type LeadStatus =
   | "Open"
   | "Completed"
   | "Feedback"
-  | "New Lead";
+  | "New Lead"
+  | "Dead Lead";
 
 export interface Lead {
   id: number;
