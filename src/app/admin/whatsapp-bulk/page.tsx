@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { getApiBase } from "../../../lib/apiBase";
 
 const API_BASE = getApiBase();
@@ -118,16 +118,32 @@ export default function WhatsAppBulkPage() {
     loadBulkJobs();
   }, [templateType]);
 
+  // Load progress for all processing jobs on mount and when jobs list changes
   useEffect(() => {
-    if (selectedJob) {
-      // Poll more frequently for progress updates (every 1 second)
+    // Load status for all processing jobs to show progress bars
+    const processingJobs = bulkJobs.filter(job => job.status === 'processing');
+    processingJobs.forEach(job => {
+      loadBulkJobStatus(job.id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bulkJobs.length, bulkJobs.map(j => j.id).join(',')]);
+
+  // Poll for progress updates for all processing jobs
+  useEffect(() => {
+    const processingJobs = bulkJobs.filter(job => job.status === 'processing');
+    if (processingJobs.length > 0) {
       const interval = setInterval(() => {
-        loadBulkJobStatus(selectedJob);
-        loadBulkJobs(); // Refresh job list
-      }, 1000); // Poll every 1 second for real-time progress
+        // Update all processing jobs
+        processingJobs.forEach(job => {
+          loadBulkJobStatus(job.id);
+        });
+        // Also refresh job list to get latest status
+        loadBulkJobs();
+      }, 2000); // Poll every 2 seconds for real-time progress
       return () => clearInterval(interval);
     }
-  }, [selectedJob]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bulkJobs.length, bulkJobs.filter(j => j.status === 'processing').map(j => j.id).join(',')]);
   
   async function loadBulkJobStatus(jobId: number) {
     try {
@@ -140,14 +156,47 @@ export default function WhatsAppBulkPage() {
         if (data.job) {
           setJobProgress(prev => ({ ...prev, [jobId]: data.job }));
           
-          // Stop polling if job is completed or failed
-          if (data.job.status === "completed" || data.job.status === "failed" || data.job.status === "partial") {
-            setSelectedJob(null);
+          // Stop polling if job is completed, failed, or cancelled
+          if (data.job.status === "completed" || data.job.status === "failed" || data.job.status === "partial" || data.job.status === "cancelled") {
+            if (selectedJob === jobId) {
+              setSelectedJob(null);
+            }
           }
         }
       }
     } catch (err) {
       console.error("Failed to load job status:", err);
+    }
+  }
+
+  async function cancelJob(jobId: number) {
+    if (!confirm(`Are you sure you want to cancel this campaign? Messages already sent cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/whatsapp/teleobi/jobs/${jobId}/cancel`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setSuccess(`Campaign #${jobId} has been cancelled.`);
+          // Refresh job list and progress
+          loadBulkJobs();
+          loadBulkJobStatus(jobId);
+        } else {
+          setError(data.error || "Failed to cancel campaign");
+        }
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to cancel campaign");
+      }
+    } catch (err) {
+      console.error("Failed to cancel job:", err);
+      setError("Failed to cancel campaign. Please try again.");
     }
   }
   
@@ -499,79 +548,132 @@ export default function WhatsAppBulkPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {bulkJobs.map((job) => (
-                      <tr key={job.id} className="border-b border-zinc-200 hover:bg-zinc-50 transition">
-                        <td className="py-4 px-4">
-                          <span className="text-sm font-bold text-zinc-900">#{job.id}</span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="text-sm text-zinc-900 font-medium">{job.job_name || `Job #${job.id}`}</div>
-                          {job.created_at && (
-                            <div className="text-xs text-zinc-500 mt-1">
-                              {new Date(job.created_at).toLocaleDateString()}
-                            </div>
+                    {bulkJobs.map((job) => {
+                      // Get latest progress data if available
+                      const progressData = jobProgress[job.id] || job;
+                      const isProcessing = job.status === 'processing';
+                      
+                      return (
+                        <Fragment key={job.id}>
+                          <tr className="border-b border-zinc-200 hover:bg-zinc-50 transition">
+                            <td className="py-4 px-4">
+                              <span className="text-sm font-bold text-zinc-900">#{job.id}</span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="text-sm text-zinc-900 font-medium">{job.job_name || `Job #${job.id}`}</div>
+                              {job.created_at && (
+                                <div className="text-xs text-zinc-500 mt-1">
+                                  {new Date(job.created_at).toLocaleDateString()}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="text-sm text-zinc-700">{job.template_name}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-semibold text-zinc-900">{job.total_recipients}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm text-zinc-700">{progressData.processed_count || 0}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-semibold text-zinc-900">{progressData.sent_count || 0}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-semibold text-emerald-600">{progressData.delivered_count || 0}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-semibold text-blue-600">{progressData.read_count || 0}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-semibold text-red-600">{progressData.failed_count || 0}</span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className={`text-sm font-semibold ${
+                                progressData.delivery_rate >= 90 ? 'text-emerald-600' :
+                                progressData.delivery_rate >= 70 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {progressData.delivery_rate !== undefined ? `${progressData.delivery_rate.toFixed(1)}%` : '-'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className={`text-sm font-semibold ${
+                                progressData.read_rate >= 50 ? 'text-blue-600' :
+                                progressData.read_rate >= 30 ? 'text-yellow-600' :
+                                'text-zinc-500'
+                              }`}>
+                                {progressData.read_rate !== undefined ? `${progressData.read_rate.toFixed(1)}%` : '-'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                                job.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                                job.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                job.status === 'cancelled' ? 'bg-orange-100 text-orange-800' :
+                                job.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                'bg-zinc-100 text-zinc-800'
+                              }`}>
+                                {job.status.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <div className="flex gap-2 justify-center">
+                                {isProcessing && (
+                                  <button
+                                    onClick={() => cancelJob(job.id)}
+                                    className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition"
+                                    title="Stop this campaign"
+                                  >
+                                    🛑 Stop
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => fetchJobDetails(job.id)}
+                                  disabled={fetchingDetails[job.id]}
+                                  className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                >
+                                  {fetchingDetails[job.id] ? "⏳ Fetching..." : "📊 Fetch Details"}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          {/* Progress Bar Row for Processing Jobs */}
+                          {isProcessing && progressData && (
+                            <tr className="border-b border-zinc-200 bg-blue-50">
+                              <td colSpan={13} className="py-3 px-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-semibold text-blue-900">
+                                      Sending Messages... {progressData.processed_count || 0} / {progressData.total_recipients}
+                                    </span>
+                                    {progressData.eta_seconds && progressData.eta_seconds > 0 && (
+                                      <span className="text-sm text-blue-700">
+                                        ETA: {Math.floor(progressData.eta_seconds / 60)}m {Math.round(progressData.eta_seconds % 60)}s
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="w-full bg-blue-200 rounded-full h-2.5">
+                                    <div
+                                      className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                      style={{
+                                        width: `${Math.min(progressData.progress_percentage || 0, 100)}%`
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between text-xs text-blue-700">
+                                    <span>{Math.round(progressData.progress_percentage || 0)}% Complete</span>
+                                    <span>
+                                      ✅ Sent: {progressData.sent_count || 0} | ❌ Failed: {progressData.failed_count || 0}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm text-zinc-700">{job.template_name}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm font-semibold text-zinc-900">{job.total_recipients}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm text-zinc-700">{job.processed_count || 0}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm font-semibold text-zinc-900">{job.sent_count || 0}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm font-semibold text-emerald-600">{job.delivered_count || 0}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm font-semibold text-blue-600">{job.read_count || 0}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className="text-sm font-semibold text-red-600">{job.failed_count || 0}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className={`text-sm font-semibold ${
-                            job.delivery_rate >= 90 ? 'text-emerald-600' :
-                            job.delivery_rate >= 70 ? 'text-yellow-600' :
-                            'text-red-600'
-                          }`}>
-                            {job.delivery_rate !== undefined ? `${job.delivery_rate.toFixed(1)}%` : '-'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className={`text-sm font-semibold ${
-                            job.read_rate >= 50 ? 'text-blue-600' :
-                            job.read_rate >= 30 ? 'text-yellow-600' :
-                            'text-zinc-500'
-                          }`}>
-                            {job.read_rate !== undefined ? `${job.read_rate.toFixed(1)}%` : '-'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                            job.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
-                            job.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            job.status === 'failed' ? 'bg-red-100 text-red-800' :
-                            'bg-zinc-100 text-zinc-800'
-                          }`}>
-                            {job.status.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <button
-                            onClick={() => fetchJobDetails(job.id)}
-                            disabled={fetchingDetails[job.id]}
-                            className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                          >
-                            {fetchingDetails[job.id] ? "⏳ Fetching..." : "📊 Fetch Details"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                        </Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <div className="mt-4 text-sm text-zinc-500 text-center">
