@@ -194,17 +194,43 @@ export function usePushNotifications() {
     }
 
     const unsubscribe = onForegroundMessage((payload) => {
-      console.log("Foreground message received:", payload);
+      console.log("🔔 Foreground message received:", payload);
+      
+      // Check notification permission before showing
+      if (Notification.permission !== "granted") {
+        console.warn("⚠️ Notification permission not granted. Permission:", Notification.permission);
+        console.warn("⚠️ Please grant notification permission to receive notifications.");
+        return;
+      }
       
       // Show notification even when app is in foreground
       if (payload.notification) {
-        new Notification(payload.notification.title || "New Notification", {
-          body: payload.notification.body,
-          icon: payload.notification.icon || "/icon-192x192.png",
-          badge: "/badge-72x72.png",
-          tag: payload.data?.tag || "default",
-          data: payload.data || {},
-        });
+        try {
+          const notification = new Notification(
+            payload.notification.title || "New Notification",
+            {
+              body: payload.notification.body,
+              icon: payload.notification.icon || "/icon-192x192.png",
+              badge: "/badge-72x72.png",
+              tag: payload.data?.tag || "default",
+              data: payload.data || {},
+              requireInteraction: false,
+            }
+          );
+          
+          console.log("✅ Foreground notification created:", notification);
+          
+          // Handle notification click
+          notification.onclick = (event) => {
+            event.preventDefault();
+            const url = payload.data?.url || "/todays-leads";
+            window.focus();
+            window.location.href = url;
+            notification.close();
+          };
+        } catch (error) {
+          console.error("❌ Error creating foreground notification:", error);
+        }
       }
     });
 
