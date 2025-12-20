@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getApiBase } from "../lib/apiBase";
+import { getFCMToken, onForegroundMessage } from "../lib/firebase";
 
 const API_BASE = getApiBase();
 
@@ -13,13 +14,22 @@ export function usePushNotifications() {
 
   // Check if push notifications are supported
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window) {
-      setIsSupported(true);
-      setPermission(Notification.permission);
+    if (typeof window !== "undefined") {
+      // Check for service worker support
+      const hasServiceWorker = "serviceWorker" in navigator;
+      // Check for notification support
+      const hasNotifications = "Notification" in window;
+      // Check for Firebase Messaging (FCM)
+      const hasFCM = typeof window !== "undefined";
+      
+      if (hasServiceWorker && hasNotifications && hasFCM) {
+        setIsSupported(true);
+        setPermission(Notification.permission);
+      }
     }
   }, []);
 
-  // Register service worker
+  // Register Firebase Messaging service worker
   const registerServiceWorker = useCallback(async () => {
     if (!isSupported) {
       console.log("Push notifications not supported");
@@ -27,10 +37,15 @@ export function usePushNotifications() {
     }
 
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js", {
+      // Register Firebase Messaging service worker
+      const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
         scope: "/",
       });
-      console.log("Service Worker registered:", registration);
+      console.log("Firebase Messaging Service Worker registered:", registration);
+      
+      // Wait for service worker to be ready
+      await navigator.serviceWorker.ready;
+      
       return registration;
     } catch (error) {
       console.error("Service Worker registration failed:", error);
@@ -54,7 +69,7 @@ export function usePushNotifications() {
     }
   }, [isSupported]);
 
-  // Subscribe to push notifications
+  // Subscribe to push notifications (FCM)
   const subscribe = useCallback(async () => {
     if (!isSupported || permission !== "granted") {
       console.log("Push notifications not supported or permission not granted");
@@ -73,39 +88,16 @@ export function usePushNotifications() {
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
 
-      // Get VAPID public key from server
-      let vapidPublicKey = "";
-      try {
-        const keyResponse = await fetch(`${API_BASE}/api/push/vapid-public-key`, {
-          credentials: "include",
-        });
-        if (keyResponse.ok) {
-          const keyData = await keyResponse.json();
-          vapidPublicKey = keyData.publicKey || "";
-        } else {
-          console.warn("Failed to fetch VAPID public key:", keyResponse.status);
-        }
-      } catch (error) {
-        console.error("Error fetching VAPID public key:", error);
-        // Don't retry on error - just continue without key
+      // Get FCM token
+      const fcmToken = await getFCMToken();
+      
+      if (!fcmToken) {
+        throw new Error("Failed to get FCM token");
       }
 
-      if (!vapidPublicKey) {
-        console.warn("VAPID public key not available");
-        // Continue anyway - the backend will handle it
-      }
+      console.log("FCM Token obtained:", fcmToken);
 
-      // Subscribe to push notifications
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey
-          ? urlBase64ToUint8Array(vapidPublicKey)
-          : undefined,
-      });
-
-      console.log("Push subscription:", subscription);
-
-      // Send subscription to backend
+      // Send FCM token to backend
       const response = await fetch(`${API_BASE}/api/push/subscribe`, {
         method: "POST",
         credentials: "include",
@@ -113,21 +105,19 @@ export function usePushNotifications() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
-            auth: arrayBufferToBase64(subscription.getKey("auth")),
-          },
+          fcm_token: fcmToken,
+          // Keep endpoint for backward compatibility during migration
+          endpoint: fcmToken, // Using token as endpoint identifier
         }),
       });
 
       if (response.ok) {
         setIsSubscribed(true);
-        console.log("Push subscription registered successfully");
+        console.log("FCM token registered successfully");
         return true;
       } else {
         const error = await response.json();
-        console.error("Failed to register push subscription:", error);
+        console.error("Failed to register FCM token:", error);
         return false;
       }
     } catch (error) {
@@ -145,29 +135,26 @@ export function usePushNotifications() {
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-
-      if (subscription) {
-        // Get endpoint to send to backend
-        const endpoint = subscription.endpoint;
-
-        // Unsubscribe from push service
-        await subscription.unsubscribe();
-
-        // Remove subscription from backend
+      // Get current FCM token
+      const fcmToken = await getFCMToken();
+      
+      if (fcmToken) {
+        // Remove token from backend
         const response = await fetch(`${API_BASE}/api/push/unsubscribe`, {
           method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ endpoint }),
+          body: JSON.stringify({ 
+            fcm_token: fcmToken,
+            endpoint: fcmToken, // For backward compatibility
+          }),
         });
 
         if (response.ok) {
           setIsSubscribed(false);
-          console.log("Push subscription removed successfully");
+          console.log("FCM token removed successfully");
           return true;
         }
       }
@@ -185,13 +172,45 @@ export function usePushNotifications() {
       return;
     }
 
+    // Only check subscription if permission is granted
+    if (permission !== "granted") {
+      setIsSubscribed(false);
+      return;
+    }
+
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
+      const fcmToken = await getFCMToken();
+      setIsSubscribed(!!fcmToken);
     } catch (error) {
       console.error("Error checking subscription:", error);
+      setIsSubscribed(false);
     }
+  }, [isSupported, permission]);
+
+  // Listen for foreground messages
+  useEffect(() => {
+    if (!isSupported) {
+      return;
+    }
+
+    const unsubscribe = onForegroundMessage((payload) => {
+      console.log("Foreground message received:", payload);
+      
+      // Show notification even when app is in foreground
+      if (payload.notification) {
+        new Notification(payload.notification.title || "New Notification", {
+          body: payload.notification.body,
+          icon: payload.notification.icon || "/icon-192x192.png",
+          badge: "/badge-72x72.png",
+          tag: payload.data?.tag || "default",
+          data: payload.data || {},
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [isSupported]);
 
   // Initialize on mount - only once
@@ -200,10 +219,13 @@ export function usePushNotifications() {
     if (isSupported && !initializedRef.current) {
       initializedRef.current = true;
       registerServiceWorker();
-      checkSubscription();
+      // Only check subscription if permission is already granted
+      if (permission === "granted") {
+        checkSubscription();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSupported]); // Only run once when isSupported becomes true
+  }, [isSupported, permission]); // Run when isSupported or permission changes
 
   return {
     isSupported,
@@ -216,29 +238,3 @@ export function usePushNotifications() {
     checkSubscription,
   };
 }
-
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): BufferSource {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray as BufferSource;
-}
-
-// Helper function to convert ArrayBuffer to base64
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return "";
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
-
