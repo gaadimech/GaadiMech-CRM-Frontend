@@ -20,6 +20,9 @@ firebase.initializeApp(firebaseConfig);
 // Retrieve an instance of Firebase Messaging
 const messaging = firebase.messaging();
 
+// Note: Token refresh is handled by the frontend through periodic checks and visibility change events
+// This ensures tokens stay active and are refreshed when needed
+
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
@@ -104,4 +107,5 @@ self.addEventListener('activate', (event) => {
   );
   return self.clients.claim();
 });
+
 

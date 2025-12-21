@@ -187,6 +187,50 @@ export function usePushNotifications() {
     }
   }, [isSupported, permission]);
 
+  // Listen for token refresh events from service worker
+  useEffect(() => {
+    if (!isSupported || permission !== "granted") {
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'FCM_TOKEN_REFRESH') {
+        console.log("🔄 FCM token refreshed by service worker, updating backend...");
+        const newToken = event.data.token;
+        
+        // Update backend with new token
+        fetch(`${API_BASE}/api/push/subscribe`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fcm_token: newToken,
+            endpoint: newToken,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              console.log("✅ New FCM token updated in backend after refresh");
+              setIsSubscribed(true);
+            } else {
+              console.error("❌ Failed to update new FCM token in backend");
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Error updating new FCM token:", error);
+          });
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, [isSupported, permission]);
+
   // Listen for foreground messages
   useEffect(() => {
     if (!isSupported) {
@@ -239,6 +283,46 @@ export function usePushNotifications() {
     };
   }, [isSupported]);
 
+  // Refresh token function - gets new token and updates backend
+  const refreshToken = useCallback(async () => {
+    if (!isSupported || permission !== "granted") {
+      return false;
+    }
+
+    try {
+      const fcmToken = await getFCMToken();
+      if (!fcmToken) {
+        console.warn("⚠️ No FCM token available for refresh");
+        return false;
+      }
+
+      // Send updated token to backend
+      const response = await fetch(`${API_BASE}/api/push/subscribe`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fcm_token: fcmToken,
+          endpoint: fcmToken,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("✅ FCM token refreshed and updated in backend");
+        setIsSubscribed(true);
+        return true;
+      } else {
+        console.error("❌ Failed to refresh FCM token in backend");
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing FCM token:", error);
+      return false;
+    }
+  }, [isSupported, permission]);
+
   // Initialize on mount - only once
   const initializedRef = useRef(false);
   useEffect(() => {
@@ -253,6 +337,62 @@ export function usePushNotifications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupported, permission]); // Run when isSupported or permission changes
 
+  // Refresh token on page visibility/focus (when user returns to tab)
+  useEffect(() => {
+    if (!isSupported || permission !== "granted") {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log("🔄 Page visible - refreshing FCM token...");
+        // Small delay to ensure service worker is ready
+        setTimeout(() => {
+          refreshToken();
+        }, 1000);
+      }
+    };
+
+    const handleFocus = () => {
+      console.log("🔄 Window focused - refreshing FCM token...");
+      setTimeout(() => {
+        refreshToken();
+      }, 1000);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [isSupported, permission, refreshToken]);
+
+  // Periodic token refresh (every 30 minutes) to ensure tokens stay active
+  useEffect(() => {
+    if (!isSupported || permission !== "granted") {
+      return;
+    }
+
+    // Initial refresh after 5 minutes (to catch any early token rotations)
+    const initialTimeout = setTimeout(() => {
+      console.log("🔄 Periodic token refresh (initial)...");
+      refreshToken();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Then refresh every 30 minutes
+    const interval = setInterval(() => {
+      console.log("🔄 Periodic token refresh (30 min interval)...");
+      refreshToken();
+    }, 30 * 60 * 1000); // 30 minutes
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [isSupported, permission, refreshToken]);
+
   return {
     isSupported,
     permission,
@@ -262,5 +402,6 @@ export function usePushNotifications() {
     subscribe,
     unsubscribe,
     checkSubscription,
+    refreshToken,
   };
 }
